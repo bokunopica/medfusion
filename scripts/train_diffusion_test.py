@@ -57,7 +57,7 @@ if __name__ == "__main__":
         augment_vertical_flip=False,
         # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
         # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
-        path_root = '/mnt/c/MyCodes/cheXpertData/'
+        path_root = '/home/Slp9280082/'
     )
   
     dm = SimpleDataModule(
