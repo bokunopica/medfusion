@@ -203,8 +203,9 @@ class CheXpert_2_Dataset(SimpleDataset2D):
 class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        labels = pd.read_csv(self.path_root/'labels/train_cheXbert.csv')
-        labels = labels.iloc[:20]
+        labels = pd.read_csv(self.path_root/'train.csv')
+        labels = labels[labels['Frontal/Lateral']=='Frontal']
+        labels = labels.iloc[:1000]
         self.labels = labels 
     
     def __len__(self):
@@ -213,6 +214,7 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __getitem__(self, index):
         row = self.labels.iloc[index]
         idx, image_path = row.index, row['Path']
+        
         image_path = image_path.split('CheXpert-v1.0/')[1]
         path_item = self.path_root/image_path
 
@@ -245,6 +247,5 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
             weights[index] = weight_per_class[target]
         return weights
     
-
     def load_item(self, path_item):
         return Image.open(path_item).convert('RGB')
