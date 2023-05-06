@@ -5,6 +5,7 @@ from torch import nn
 from pathlib import Path 
 from torchvision import transforms as T
 import pandas as pd 
+import numpy as np
 
 from PIL import Image
 
@@ -175,7 +176,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
 
     def __getitem__(self, index):
         path_index, image_index = self.labels.index[index]
-        path_item = self.path_root/'data'/f'{image_index:06}.png'
+        path_item = self.path_root/'train'/f'{image_index:06}.png'
         img = self.load_item(path_item)
         uid = image_index
         target = int(self.labels.loc[(path_index, image_index), 'Cardiomegaly'])
@@ -196,3 +197,54 @@ class CheXpert_2_Dataset(SimpleDataset2D):
             target = self.labels.loc[self.labels.index[index], 'Cardiomegaly']
             weights[index] = weight_per_class[target]
         return weights
+    
+
+
+class CheXpert_2_Dataset_test(SimpleDataset2D):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        labels = pd.read_csv(self.path_root/'labels/train_cheXbert.csv')
+        labels = labels.iloc[:20]
+        self.labels = labels 
+    
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        row = self.labels.iloc[index]
+        idx, image_path = row.index, row['Path']
+        image_path = image_path.split('CheXpert-v1.0/')[1]
+        path_item = self.path_root/image_path
+
+        # TODO img need to be resized or cropped in case different height and width causes exception in the following code
+        img = self.load_item(path_item)
+
+        # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
+        raw_target = row['Cardiomegaly']
+        if raw_target is np.nan:
+            target = 0
+        elif raw_target == 1.0:
+            target = 1
+        else:
+            target = 0
+        source = self.transform(img)
+        return {'source': source, 'target':target}
+    
+    @classmethod
+    def run_item_crawler(cls, path_root, extension, **kwargs):
+        """Overwrite to speed up as paths are determined by .csv file anyway"""
+        return []
+    
+    def get_weights(self):
+        n_samples = len(self)
+        weight_per_class = 1/self.labels['Cardiomegaly'].value_counts(normalize=True)
+        # weight_per_class = {2.0: 1.2, 1.0: 8.2, 0.0: 24.3}
+        weights = [0] * n_samples
+        for index in range(n_samples):
+            target = self.labels.loc[self.labels.index[index], 'Cardiomegaly']
+            weights[index] = weight_per_class[target]
+        return weights
+    
+
+    def load_item(self, path_item):
+        return Image.open(path_item).convert('RGB')
