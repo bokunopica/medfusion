@@ -19,6 +19,7 @@ from medical_diffusion.models.embedders.latent_embedders import VQVAE, VQGAN, VA
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 from medical_diffusion.utils.train_utils import PyObjectCache
+from tqdm import trange
 
 
 if __name__ == "__main__":
@@ -66,6 +67,10 @@ if __name__ == "__main__":
     #     path_root = '/mnt/c/MyCodes/'
     # )
     cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
+
+    for i in trange(1000):
+        # data cache
+        ds_3[i]
 
     # ds = ConcatDataset([ds_1, ds_2, ds_3])
    
@@ -165,7 +170,7 @@ if __name__ == "__main__":
     )
     trainer = Trainer(
         accelerator='gpu',
-        devices=-1,
+        devices=[0],
         # precision=16,
         # amp_backend='apex',
         # amp_level='O2',

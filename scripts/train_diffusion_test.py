@@ -18,6 +18,8 @@ from medical_diffusion.external.stable_diffusion.unet_openai import UNetModel
 from medical_diffusion.models.noise_schedulers import GaussianNoiseScheduler
 from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding
 from medical_diffusion.models.embedders.latent_embedders import VAE, VAEGAN, VQVAE, VQGAN
+from medical_diffusion.utils.train_utils import PyObjectCache
+from tqdm import trange
 
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -59,6 +61,13 @@ if __name__ == "__main__":
         # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
         path_root = '/home/Slp9280082/'
     )
+
+    cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
+
+    for i in trange(1000):
+        # data cache
+        ds_3[i]
+
   
     dm = SimpleDataModule(
         ds_train = ds_3,

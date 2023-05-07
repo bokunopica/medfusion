@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from medical_diffusion.data.augmentation.augmentations_2d import Normalize, ToTensor16bit
-from functools import lru_cache
+from medical_diffusion.utils.train_utils import PyObjectCache
 
 
 class SimpleDataset2D(data.Dataset):
@@ -205,7 +205,7 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         super().__init__(*args, **kwargs)
         labels = pd.read_csv(self.path_root/'CheXpert-v1.0'/'train.csv')
         labels = labels[labels['Frontal/Lateral']=='Frontal']
-        labels = labels.iloc[:10]
+        labels = labels.iloc[:1000]
         self.labels = labels
     
     def __len__(self):
@@ -238,17 +238,20 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     def load_item(self, path_item):
         return Image.open(path_item).convert('RGB')
     
-    @lru_cache
     def load_cache(self, image_path, raw_target):
         path_item = self.path_root/image_path
         img = self.load_item(path_item)
-        if raw_target is np.nan:
-            target = 0
-        elif raw_target == 1.0:
-            target = 1
-        else:
-            target = 0
-        source = self.transform(img)
-        result = {'source': source, 'target':target}
+        cache = PyObjectCache()
+        result = cache.get(image_path)
+        if result is None:
+            if raw_target is np.nan:
+                target = 0
+            elif raw_target == 1.0:
+                target = 1
+            else:
+                target = 0
+            source = self.transform(img)
+            result = {'source': source, 'target':target}
+            cache.set(image_path, result)
         return result
 
