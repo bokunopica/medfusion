@@ -95,26 +95,21 @@ class PyObjectCache(object):
     cache for training data img
     """
     _instance = None
+    __cache_space = None
 
     def __new__(cls):
         if PyObjectCache._instance is None:
             cls._instance = super().__new__(cls)
+            cls.__cache_space = dict()
         return cls._instance
-
-    def __init__(self) -> None:
-        self.cache_space = dict()
     
     def set(self, key, value):
-        self.cache_space[key] = value
+        self.__cache_space[key] = copy.deepcopy(value)
 
     def get(self, key):
-        return self.cache_space.get(key)
+        return self.__cache_space.get(key)
     
-    def clear(self):
-        del self.cache_space
     
-    def __del__(self):
-        self.clear()
 
 
 

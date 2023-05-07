@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from medical_diffusion.data.augmentation.augmentations_2d import Normalize, ToTensor16bit
-from medical_diffusion.utils.train_utils import PyObjectCache
+from functools import lru_cache
 
 
 class SimpleDataset2D(data.Dataset):
@@ -205,35 +205,19 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         super().__init__(*args, **kwargs)
         labels = pd.read_csv(self.path_root/'CheXpert-v1.0'/'train.csv')
         labels = labels[labels['Frontal/Lateral']=='Frontal']
-        labels = labels.iloc[:1000]
-        self.labels = labels 
+        labels = labels.iloc[:10]
+        self.labels = labels
     
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, index):
         row = self.labels.iloc[index]
-        idx, image_path = row.index, row['Path']
-        
-        image_path = image_path.split('CheXpert-v1.0/')[1]
+        image_path = row['Path']
         path_item = self.path_root/image_path
-
-        cache = PyObjectCache()
-        result = cache.get(image_path)
-        # TODO img need to be resized or cropped in case different height and width causes exception in the following code
-        if result is None:
-            img = self.load_item(path_item)
-            # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
-            raw_target = row['Cardiomegaly']
-            if raw_target is np.nan:
-                target = 0
-            elif raw_target == 1.0:
-                target = 1
-            else:
-                target = 0
-            source = self.transform(img)
-            result = {'source': source, 'target':target}
-            cache.set(image_path, result)
+        # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
+        raw_target = row['Cardiomegaly']
+        result = self.load_cache(path_item, raw_target)
         return result
     
     @classmethod
@@ -253,3 +237,18 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     
     def load_item(self, path_item):
         return Image.open(path_item).convert('RGB')
+    
+    @lru_cache
+    def load_cache(self, image_path, raw_target):
+        path_item = self.path_root/image_path
+        img = self.load_item(path_item)
+        if raw_target is np.nan:
+            target = 0
+        elif raw_target == 1.0:
+            target = 1
+        else:
+            target = 0
+        source = self.transform(img)
+        result = {'source': source, 'target':target}
+        return result
+

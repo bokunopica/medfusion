@@ -18,6 +18,8 @@ from medical_diffusion.models.embedders.latent_embedders import VQVAE, VQGAN, VA
 
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
+from medical_diffusion.utils.train_utils import PyObjectCache
+
 
 if __name__ == "__main__":
 
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
     path_run_dir = Path.cwd() / 'runs' / str(current_time)
     path_run_dir.mkdir(parents=True, exist_ok=True)
-    gpus = [0, 1] if torch.cuda.is_available() else None
+    gpus = [0] if torch.cuda.is_available() else None
 
 
     # ------------ Load Data ----------------
@@ -54,6 +56,16 @@ if __name__ == "__main__":
         # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
         path_root = '/home/Slp9280082/'
     )
+
+    # ds_3 = CheXpert_2_Dataset_test( #  256x256
+    #     image_resize=(256, 256), 
+    #     augment_horizontal_flip=False,
+    #     augment_vertical_flip=False,
+    #     # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
+    #     # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
+    #     path_root = '/mnt/c/MyCodes/'
+    # )
+    cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
 
     # ds = ConcatDataset([ds_1, ds_2, ds_3])
    
@@ -153,7 +165,7 @@ if __name__ == "__main__":
     )
     trainer = Trainer(
         accelerator='gpu',
-        devices=[0, 1],
+        devices=-1,
         # precision=16,
         # amp_backend='apex',
         # amp_level='O2',
