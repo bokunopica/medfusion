@@ -218,19 +218,23 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         image_path = image_path.split('CheXpert-v1.0/')[1]
         path_item = self.path_root/image_path
 
+        cache = PyObjectCache()
+        result = cache.get(image_path)
         # TODO img need to be resized or cropped in case different height and width causes exception in the following code
-        img = self.load_item(path_item, use_cache=True)
-
-        # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
-        raw_target = row['Cardiomegaly']
-        if raw_target is np.nan:
-            target = 0
-        elif raw_target == 1.0:
-            target = 1
-        else:
-            target = 0
-        source = self.transform(img)
-        return {'source': source, 'target':target}
+        if result is None:
+            img = self.load_item(path_item)
+            # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
+            raw_target = row['Cardiomegaly']
+            if raw_target is np.nan:
+                target = 0
+            elif raw_target == 1.0:
+                target = 1
+            else:
+                target = 0
+            source = self.transform(img)
+            result = {'source': source, 'target':target}
+            cache.set(image_path, result)
+        return result
     
     @classmethod
     def run_item_crawler(cls, path_root, extension, **kwargs):
@@ -247,13 +251,5 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
             weights[index] = weight_per_class[target]
         return weights
     
-    def load_item(self, path_item, use_cache=False):
-        if use_cache:
-            cache = PyObjectCache()
-            img = cache.get(path_item)
-            if img is None:
-                img = Image.open(path_item).convert('RGB')
-                cache.set(path_item, img)
-        else:
-            img = Image.open(path_item).convert('RGB')
-        return img
+    def load_item(self, path_item):
+        return Image.open(path_item).convert('RGB')
