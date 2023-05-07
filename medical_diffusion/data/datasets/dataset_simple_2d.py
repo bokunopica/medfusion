@@ -6,10 +6,10 @@ from pathlib import Path
 from torchvision import transforms as T
 import pandas as pd 
 import numpy as np
-
 from PIL import Image
-
 from medical_diffusion.data.augmentation.augmentations_2d import Normalize, ToTensor16bit
+from medical_diffusion.utils.train_utils import PyObjectCache
+
 
 class SimpleDataset2D(data.Dataset):
     def __init__(
@@ -249,7 +249,11 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     
     def load_item(self, path_item, use_cache=False):
         if use_cache:
-            pass
+            cache = PyObjectCache()
+            img = cache.get(path_item)
+            if img is None:
+                img = Image.open(path_item).convert('RGB')
+                cache.set(path_item, img)
         else:
             img = Image.open(path_item).convert('RGB')
         return img

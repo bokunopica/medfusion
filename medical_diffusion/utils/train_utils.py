@@ -90,14 +90,14 @@ class EMAModel(nn.Module):
 
 
 
-class ImgCache(object):
+class PyObjectCache(object):
     """
     cache for training data img
     """
     _instance = None
 
     def __new__(cls):
-        if ImgCache._instance is None:
+        if PyObjectCache._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
@@ -109,12 +109,18 @@ class ImgCache(object):
 
     def get(self, key):
         return self.cache_space.get(key)
+    
+    def clear(self):
+        del self.cache_space
+    
+    def __del__(self):
+        self.clear()
 
 
 
 
 if __name__ == "__main__":
-    a, b = ImgCache(), ImgCache()
+    a, b = PyObjectCache(), PyObjectCache()
     a.set('test', b)
     print(a)
     print(b)
