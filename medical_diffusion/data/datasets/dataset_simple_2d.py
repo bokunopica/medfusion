@@ -219,7 +219,7 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         path_item = self.path_root/image_path
 
         # TODO img need to be resized or cropped in case different height and width causes exception in the following code
-        img = self.load_item(path_item)
+        img = self.load_item(path_item, use_cache=True)
 
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row['Cardiomegaly']
