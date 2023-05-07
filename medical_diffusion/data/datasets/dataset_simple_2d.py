@@ -247,5 +247,9 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
             weights[index] = weight_per_class[target]
         return weights
     
-    def load_item(self, path_item):
-        return Image.open(path_item).convert('RGB')
+    def load_item(self, path_item, use_cache=False):
+        if use_cache:
+            pass
+        else:
+            img = Image.open(path_item).convert('RGB')
+        return img

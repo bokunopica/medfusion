@@ -1,6 +1,7 @@
 import copy
 import torch 
 import torch.nn as nn 
+import pickle
 
 class EMAModel(nn.Module):
     # See: https://github.com/huggingface/diffusers/blob/3100bc967084964480628ae61210b7eaa7436f1d/src/diffusers/training_utils.py#L42  
@@ -86,3 +87,35 @@ class EMAModel(nn.Module):
 
         self.averaged_model.load_state_dict(ema_state_dict, strict=False)
         self.optimization_step += 1
+
+
+
+class ImgCache(object):
+    """
+    cache for training data img
+    """
+    _instance = None
+
+    def __new__(cls):
+        if ImgCache._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        self.cache_space = dict()
+    
+    def set(self, key, value):
+        self.cache_space[key] = value
+
+    def get(self, key):
+        return self.cache_space.get(key)
+
+
+
+
+if __name__ == "__main__":
+    a, b = ImgCache(), ImgCache()
+    a.set('test', b)
+    print(a)
+    print(b)
+    print(b.get('test'))
