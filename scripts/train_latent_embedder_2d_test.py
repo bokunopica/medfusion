@@ -25,7 +25,7 @@ if __name__ == "__main__":
     current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
     path_run_dir = Path.cwd() / 'runs' / str(current_time)
     path_run_dir.mkdir(parents=True, exist_ok=True)
-    gpus = [0] if torch.cuda.is_available() else None
+    gpus = [0, 1] if torch.cuda.is_available() else None
 
 
     # ------------ Load Data ----------------
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     )
     trainer = Trainer(
         accelerator='gpu',
-        devices=[0],
+        devices=[0, 1],
         # precision=16,
         # amp_backend='apex',
         # amp_level='O2',

@@ -166,7 +166,7 @@ if __name__ == "__main__":
     )
     trainer = Trainer(
         accelerator=accelerator,
-        # devices=[0],
+        devices=[0, 1],
         # precision=16,
         # amp_backend='apex',
         # amp_level='O2',
