@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 
     ds_3 = CheXpert_2_Dataset_test( #  256x256
-        image_resize=(128, 128), 
+        image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
         # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'

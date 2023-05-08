@@ -217,7 +217,7 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         path_item = self.path_root/image_path
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row['Cardiomegaly']
-        result = self.load_cache(path_item, raw_target)
+        result = self.load_cache(image_path, raw_target)
         return result
     
     @classmethod
@@ -240,10 +240,10 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     
     def load_cache(self, image_path, raw_target):
         path_item = self.path_root/image_path
-        img = self.load_item(path_item)
         cache = PyObjectCache()
         result = cache.get(image_path)
         if result is None:
+            img = self.load_item(path_item)
             if raw_target is np.nan:
                 target = 0
             elif raw_target == 1.0:

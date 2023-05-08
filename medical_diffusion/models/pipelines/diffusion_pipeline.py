@@ -286,9 +286,9 @@ class DiffusionPipeline(BasicModel):
         else:
             timesteps_array = self.noise_scheduler.timesteps_array[slice(0, steps)] # [0, ...,T-1] (target time not time of x_t)
             
-        st_prog_bar = st.progress(0)
+        # st_prog_bar = st.progress(0)
         for i, t in tqdm(enumerate(reversed(timesteps_array))):
-            st_prog_bar.progress((i+1)/len(timesteps_array))
+            # st_prog_bar.progress((i+1)/len(timesteps_array))
 
             # UNet prediction 
             x_t, x_0, x_T, self_cond = self(x_t, t.expand(x_t.shape[0]), condition, self_cond=self_cond, **kwargs)

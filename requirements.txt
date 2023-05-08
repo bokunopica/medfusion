@@ -1,7 +1,7 @@
 torch # pip install torch --extra-index-url https://download.pytorch.org/whl/cu113
 numpy 
 sklearn
-pytorch-lightning==1.7.7
+pytorch-lightning
 pytorch_msssim
 monai
 torchmetrics
