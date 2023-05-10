@@ -255,3 +255,12 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
             cache.set(image_path, result)
         return result
 
+
+
+class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        labels = pd.read_csv(self.path_root/'CheXpert-v1.0'/'train.csv')
+        labels = labels[labels['Frontal/Lateral']=='Frontal']
+        labels = labels.iloc[1000:1500]
+        self.labels = labels
