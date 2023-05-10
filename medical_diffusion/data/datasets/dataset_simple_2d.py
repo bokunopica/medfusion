@@ -214,7 +214,6 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __getitem__(self, index):
         row = self.labels.iloc[index]
         image_path = row['Path']
-        path_item = self.path_root/image_path
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row['Cardiomegaly']
         result = self.load_cache(image_path, raw_target)
@@ -264,3 +263,15 @@ class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
         labels = labels[labels['Frontal/Lateral']=='Frontal']
         labels = labels.iloc[1000:1500]
         self.labels = labels
+
+
+class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset_test):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.labels = self.labels[self.labels['Cardiomegaly']==1]
+
+
+class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset_test):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.labels = self.labels[self.labels['Cardiomegaly']!=1]
