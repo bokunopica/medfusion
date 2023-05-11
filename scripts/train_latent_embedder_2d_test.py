@@ -76,7 +76,7 @@ if __name__ == "__main__":
    
     dm = SimpleDataModule(
         ds_train = ds_3,
-        batch_size=8, 
+        batch_size=16, 
         # num_workers=0,
         pin_memory=True
     ) 
