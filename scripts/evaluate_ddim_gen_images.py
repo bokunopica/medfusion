@@ -29,6 +29,9 @@ pil2torch = (
     lambda x: torch.as_tensor(np.array(x)).moveaxis(-1, 0) / 255.0
 )  # In contrast to ToTensor(), this will not cast 0-255 to 0-1 and destroy uint8 (required later)
 
+def normalize(img):
+    # img =  torch.stack([b.clamp(torch.quantile(b, 0.001), torch.quantile(b, 0.999)) for b in img])
+    return torch.stack([(b - b.min()) / (b.max() - b.min()) for b in img])
 
 # ----------------- Logging -----------
 current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
@@ -62,7 +65,7 @@ for i in trange(test_size_half * 2):
 for cond in [0, 1]:
     for i in trange(test_size_half):
         fake_img_path = gen_image_path / f"test_{cond}_{i}.png"
-        fake_img = pil2torch(Image.open(fake_img_path).convert("RGB")).type(torch.uint8).unsqueeze(0).to(device)
+        fake_img = dataset_real.transform(Image.open(fake_img_path).convert("RGB")).type(torch.uint8).unsqueeze(0).to(device)
         calc_fid.update(fake_img, real=False)
         calc_pr.update(fake_img, real=False)
 
