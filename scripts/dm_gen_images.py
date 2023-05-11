@@ -3,6 +3,7 @@ import torch
 from torchvision import utils
 import math
 from medical_diffusion.models.pipelines import DiffusionPipeline
+from medical_diffusion.data.datasets import CheXpert_2_Dataset_evaluate
 from PIL import Image
 
 
@@ -35,35 +36,43 @@ if __name__ == "__main__":
     steps = 150
     use_ddim = True
     images = {}
-    # n_samples = 1
+    n_samples = 500
+    evaluate_ds = CheXpert_2_Dataset_evaluate(  #  256x256
+        image_resize=(256, 256),
+        augment_horizontal_flip=False,
+        augment_vertical_flip=False,
+        path_root="/home/Slp9280082/"
+    )
 
     un_cond = None
 
-    for i in range(250):
+    for i in range(n_samples):
         # for cond in [0, 1, None]:
-        for cond in [0, 1]:
-            img_size = (8, 32, 32)
-            condition = torch.tensor([cond], device=device) if cond is not None else None
-            with torch.no_grad():
-                result = pipeline.sample(
-                    1,
-                    (8, 32, 32),
-                    condition=condition,
-                    un_cond=un_cond,
-                    steps=steps,
-                    use_ddim=use_ddim
-                )
+        cond = evaluate_ds.transfer_target(
+            evaluate_ds.labels.iloc[i]['Cardiomegaly']
+        )
+        img_size = (8, 32, 32)
+        condition = torch.tensor([cond], device=device) if cond is not None else None
+        with torch.no_grad():
+            result = pipeline.sample(
+                1,
+                (8, 32, 32),
+                condition=condition,
+                un_cond=un_cond,
+                steps=steps,
+                use_ddim=use_ddim
+            )
 
-            result = (result + 1) / 2  # Transform from [-1, 1] to [0, 1]
-            result = result.clamp(0, 1)
-            # results = normalize(results)
-            utils.save_image(
-                result,
-                path_out / f"test_{cond}_{i}.png",
-                nrow=int(math.sqrt(result.shape[0])),
-                normalize=True,
-                scale_each=True,
-            )  # For 2D images: [B, C, H, W]
+        result = (result + 1) / 2  # Transform from [-1, 1] to [0, 1]
+        result = result.clamp(0, 1)
+        # results = normalize(results)
+        utils.save_image(
+            result,
+            path_out / f"evaluate_{i}.png",
+            nrow=int(math.sqrt(result.shape[0])),
+            normalize=True,
+            scale_each=True,
+        )  # For 2D images: [B, C, H, W]
 
 
     # image concat

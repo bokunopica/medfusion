@@ -243,16 +243,21 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         result = cache.get(image_path)
         if result is None:
             img = self.load_item(path_item)
-            if raw_target is np.nan:
-                target = 0
-            elif raw_target == 1.0:
-                target = 1
-            else:
-                target = 0
+            target = self.transfer_target(raw_target)
             source = self.transform(img)
             result = {'source': source, 'target':target}
             cache.set(image_path, result)
         return result
+    
+    @classmethod
+    def transfer_target(cls, raw_target):
+        if raw_target is np.nan:
+            target = 0
+        elif raw_target == 1.0:
+            target = 1
+        else:
+            target = 0
+        return target
 
 
 
