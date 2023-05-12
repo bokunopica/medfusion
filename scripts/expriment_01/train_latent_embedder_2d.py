@@ -32,50 +32,23 @@ if __name__ == "__main__":
 
 
     # ------------ Load Data ----------------
-    # ds_1 = AIROGSDataset( #  256x256
-    #     crawler_ext='jpg',
-    #     augment_horizontal_flip=True,
-    #     augment_vertical_flip=True,
-    #     # path_root='/home/gustav/Documents/datasets/AIROGS/dataset',
-    #     path_root='/mnt/hdd/datasets/eye/AIROGS/data_256x256',
-    # )
 
-    # ds_2 = MSIvsMSS_2_Dataset( #  512x512
-    #     # image_resize=256,    
-    #     crawler_ext='jpg',
-    #     augment_horizontal_flip=True,
-    #     augment_vertical_flip=True,
-    #     # path_root='/home/gustav/Documents/datasets/Kather_2/train'
-    #     path_root='/mnt/hdd/datasets/pathology/kather_msi_mss_2/train/'
-    # )
-
-    ds_3 = CheXpert_2_Dataset_test( #  256x256
+    ds = CheXpert_2_Dataset_test( #  256x256
         image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
-        # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
         path_root = '/home/Slp9280082/'
     )
 
-    # ds_3 = CheXpert_2_Dataset_test( #  256x256
+    # ds = CheXpert_2_Dataset_test( #  256x256
     #     image_resize=(256, 256), 
     #     augment_horizontal_flip=False,
     #     augment_vertical_flip=False,
-    #     # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
-    #     # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
     #     path_root = '/mnt/c/MyCodes/'
     # )
-    # cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
-
-    # for i in trange(1000):
-    #     # data cache
-    #     ds_3[i]
-
-    # ds = ConcatDataset([ds_1, ds_2, ds_3])
    
     dm = SimpleDataModule(
-        ds_train = ds_3,
+        ds_train = ds,
         batch_size=16, 
         # num_workers=0,
         pin_memory=True,
@@ -98,58 +71,6 @@ if __name__ == "__main__":
         # optimizer_kwargs={'lr':1e-6},
         embedding_loss_weight=1e-6
     )
-
-    # model.load_pretrained(Path.cwd()/'runs/2022_12_01_183752_patho_vae/last.ckpt', strict=True)
-
-    # model = VAEGAN(
-    #     in_channels=3, 
-    #     out_channels=3, 
-    #     emb_channels=8,
-    #     spatial_dims=2,
-    #     hid_chs =    [ 64, 128, 256,  512],
-    #     deep_supervision=1,
-    #     use_attention= 'none',
-    #     start_gan_train_step=-1,
-    #     embedding_loss_weight=1e-6
-    # )
-
-    # model.vqvae.load_pretrained(Path.cwd()/'runs/2022_11_25_082209_chest_vae/last.ckpt')
-    # model.load_pretrained(Path.cwd()/'runs/2022_11_25_232957_patho_vaegan/last.ckpt')
-
-
-    # model = VQVAE(
-    #     in_channels=3, 
-    #     out_channels=3, 
-    #     emb_channels=4,
-    #     num_embeddings = 8192,
-    #     spatial_dims=2,
-    #     hid_chs =    [64, 128, 256, 512],
-    #     embedding_loss_weight=1,
-    #     beta=1,
-    #     loss = torch.nn.L1Loss,
-    #     deep_supervision=1,
-    #     use_attention = 'none',
-    # )
-
-
-    # model = VQGAN(
-    #     in_channels=3, 
-    #     out_channels=3, 
-    #     emb_channels=4,
-    #     num_embeddings = 8192,
-    #     spatial_dims=2,
-    #     hid_chs =    [64, 128, 256, 512],
-    #     embedding_loss_weight=1,
-    #     beta=1,
-    #     start_gan_train_step=-1,
-    #     pixel_loss = torch.nn.L1Loss,
-    #     deep_supervision=1,
-    #     use_attention='none',
-    # )
-    
-    # model.vqvae.load_pretrained(Path.cwd()/'runs/2022_12_13_093727_patho_vqvae/last.ckpt')
-    
-
     # -------------- Training Initialization ---------------
     to_monitor = "train/L1"  # "val/loss" 
     min_max = "min"

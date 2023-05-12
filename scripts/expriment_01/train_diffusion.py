@@ -1,26 +1,15 @@
-
-from email.mime import audio
 from pathlib import Path
 from datetime import datetime
-
 import torch 
-import torch.nn as nn
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-import numpy as np 
-import torchio as tio 
-
 from medical_diffusion.data.datamodules import SimpleDataModule
-from medical_diffusion.data.datasets import AIROGSDataset, MSIvsMSS_2_Dataset, CheXpert_2_Dataset_test
+from medical_diffusion.data.datasets import CheXpert_2_Dataset_test
 from medical_diffusion.models.pipelines import DiffusionPipeline
 from medical_diffusion.models.estimators import UNet
-from medical_diffusion.external.stable_diffusion.unet_openai import UNetModel
 from medical_diffusion.models.noise_schedulers import GaussianNoiseScheduler
 from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding
-from medical_diffusion.models.embedders.latent_embedders import VAE, VAEGAN, VQVAE, VQGAN
-from medical_diffusion.utils.train_utils import PyObjectCache
-from tqdm import trange
-
+from medical_diffusion.models.embedders.latent_embedders import VAE
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
@@ -28,32 +17,8 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 if __name__ == "__main__":
     # ------------ Load Data ----------------
-    # ds = AIROGSDataset(
-    #     crawler_ext='jpg',
-    #     augment_horizontal_flip = False,
-    #     augment_vertical_flip = False, 
-    #     # path_root='/home/gustav/Documents/datasets/AIROGS/data_256x256/',
-    #     path_root='/mnt/hdd/datasets/eye/AIROGS/data_256x256',
-    # )
 
-    # ds = MSIvsMSS_2_Dataset(
-    #     crawler_ext='jpg',
-    #     image_resize=None,
-    #     image_crop=None,
-    #     augment_horizontal_flip=False,
-    #     augment_vertical_flip=False, 
-    #     # path_root='/home/gustav/Documents/datasets/Kather_2/train',
-    #     path_root='/mnt/hdd/datasets/pathology/kather_msi_mss_2/train/',
-    # )
-
-    # ds = CheXpert_2_Dataset( #  256x256
-    #     augment_horizontal_flip=False,
-    #     augment_vertical_flip=False,
-    #     path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
-    # )
-
-
-    ds_3 = CheXpert_2_Dataset_test( #  256x256
+    ds = CheXpert_2_Dataset_test( #  256x256
         image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
@@ -62,15 +27,8 @@ if __name__ == "__main__":
         path_root = '/home/Slp9280082/'
     )
 
-    # cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
-
-    # for i in trange(1000):
-    #     # data cache
-    #     ds_3[i]
-
-  
     dm = SimpleDataModule(
-        ds_train = ds_3,
+        ds_train = ds,
         batch_size=50, 
         # num_workers=0,
         pin_memory=True,
