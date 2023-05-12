@@ -85,15 +85,8 @@ class BasicUp(nn.Module):
     ) -> None:
         super().__init__()
         self.learnable_interpolation = learnable_interpolation
-
-        def __calc_shape(x):
-            return tuple(
-                (np.asarray(x) - 1) * np.atleast_1d(stride)
-                + np.atleast_1d(kernel_size)
-                - 2 * np.atleast_1d(get_padding(kernel_size, stride))
-            )
-
-        self.calc_shape = __calc_shape
+        self.kernel_size=kernel_size
+        self.stride=stride
         if learnable_interpolation:
             # TransConvolution = Conv[Conv.CONVTRANS, spatial_dims]
             # padding = get_padding(kernel_size, stride)
@@ -124,6 +117,13 @@ class BasicUp(nn.Module):
                 self.up_skip = nn.PixelShuffle(
                     2
                 )  # WARNING: Only supports 2D, out_channels == in_channels/4
+
+    def calc_shape(self, x):
+        return tuple(
+            (np.asarray(x) - 1) * np.atleast_1d(self.stride)
+            + np.atleast_1d(self.kernel_size)
+            - 2 * np.atleast_1d(get_padding(self.kernel_size, self.stride))
+        )
 
     def forward(self, x, emb=None):
         if self.learnable_interpolation:
