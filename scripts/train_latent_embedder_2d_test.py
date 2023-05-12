@@ -66,11 +66,11 @@ if __name__ == "__main__":
     #     # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
     #     path_root = '/mnt/c/MyCodes/'
     # )
-    cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
+    # cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
 
-    for i in trange(1000):
-        # data cache
-        ds_3[i]
+    # for i in trange(1000):
+    #     # data cache
+    #     ds_3[i]
 
     # ds = ConcatDataset([ds_1, ds_2, ds_3])
    
@@ -78,7 +78,8 @@ if __name__ == "__main__":
         ds_train = ds_3,
         batch_size=16, 
         # num_workers=0,
-        pin_memory=True
+        pin_memory=True,
+        persistent_workers=True
     ) 
     
 

@@ -62,11 +62,11 @@ if __name__ == "__main__":
         path_root = '/home/Slp9280082/'
     )
 
-    cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
+    # cache = PyObjectCache() # cache object outside trainer in case it wont be destroyed
 
-    for i in trange(1000):
-        # data cache
-        ds_3[i]
+    # for i in trange(1000):
+    #     # data cache
+    #     ds_3[i]
 
   
     dm = SimpleDataModule(
@@ -75,6 +75,7 @@ if __name__ == "__main__":
         # num_workers=0,
         pin_memory=True,
         # weights=ds.get_weights()
+        persistent_workers=True
     ) 
     
     current_time = datetime.now().strftime("%Y_%m_%d_%H%M%S")
@@ -192,6 +193,7 @@ if __name__ == "__main__":
         min_epochs=100,
         max_epochs=1001,
         num_sanity_val_steps=2,
+        find_unused_parameters=False
     )
     
     # ---------------- Execute Training ----------------
