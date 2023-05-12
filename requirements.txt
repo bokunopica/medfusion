@@ -1,8 +1,9 @@
 torch==1.11.0 # pip install torch --extra-index-url https://download.pytorch.org/whl/cu113
 torchaudio==0.11.0
+torchvision==0.12.0
+pytorch-lightning==1.6.5
 numpy 
 sklearn
-pytorch-lightning==1.6.5
 pytorch_msssim
 monai
 torchmetrics
@@ -10,7 +11,6 @@ torch-fidelity
 torchio 
 pillow
 einops
-torchvision==0.12.0
 matplotlib
 pandas 
 lpips
