@@ -1,25 +1,15 @@
-
-
-
-
-
 from pathlib import Path
 from datetime import datetime
 
 import torch 
-from torch.utils.data import ConcatDataset
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-
-
 from medical_diffusion.data.datamodules import SimpleDataModule
-from medical_diffusion.data.datasets import AIROGSDataset, MSIvsMSS_2_Dataset, CheXpert_2_Dataset_test
+from medical_diffusion.data.datasets import CheXpert_2_Dataset_test
 from medical_diffusion.models.embedders.latent_embedders import VQVAE, VQGAN, VAE, VAEGAN
 
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
-from medical_diffusion.utils.train_utils import PyObjectCache
-from tqdm import trange
 
 
 if __name__ == "__main__":
