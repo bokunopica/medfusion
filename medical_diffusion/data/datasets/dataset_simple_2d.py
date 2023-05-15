@@ -248,9 +248,11 @@ class CheXpert_2_Dataset(SimpleDataset2D):
 class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
+        # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
+        labels = pd.read_csv(self.path_root/ "chexpert" / "CheXpert-v1.0-Resample@512x512" / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        labels = labels.iloc[:1000]
+        self.count = kwargs.get('count', 1000)
+        labels = labels.iloc[:self.count]
         self.labels = labels
         self.use_cache = kwargs.get("use_cache", False)
 
@@ -317,7 +319,9 @@ class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
         super().__init__(*args, **kwargs)
         labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        labels = labels.iloc[1000:1500]
+        self.start = kwargs.get('start', 1000)
+        self.count = kwargs.get('count', 500)
+        labels = labels.iloc[self.start:(self.start+self.count)]
         self.labels = labels
 
 
