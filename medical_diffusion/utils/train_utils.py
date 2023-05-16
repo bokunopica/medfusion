@@ -111,7 +111,17 @@ class PyObjectCache(object):
     
     
 
+class WebCache(object):
+    """
+    cache for training data img in a web app
+    """
+    def set(self, key, value):
+        
+        pass
 
+    def get(self, key):
+        pass
+    
 
 
 if __name__ == "__main__":
