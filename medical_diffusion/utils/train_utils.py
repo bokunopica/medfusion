@@ -1,7 +1,8 @@
 import copy
 import torch 
 import torch.nn as nn 
-import pickle
+import os
+from PIL import Image
 
 class EMAModel(nn.Module):
     # See: https://github.com/huggingface/diffusers/blob/3100bc967084964480628ae61210b7eaa7436f1d/src/diffusers/training_utils.py#L42  
@@ -121,6 +122,27 @@ class WebCache(object):
 
     def get(self, key):
         pass
+
+
+class MemStorageCache(object):
+    """
+    cache for training data img in a web app
+    """
+    _path = "/run/user/10009"
+    def set(self, img_path:str, image: Image):
+        key_path = f"{self._path}/{img_path}"
+        if not os.path.exists(key_path):
+            os.makedirs(key_path)
+        with open(key_path) as f:
+            image.save(f)
+
+    def get(self, img_path:str):
+        key_path = f"{self._path}/{img_path}"
+        if os.path.exists(key_path):
+            source = Image.open(key_path)
+        else:
+            source = None
+        return source
     
 
 

@@ -10,7 +10,7 @@ from medical_diffusion.data.augmentation.augmentations_2d import (
     Normalize,
     ToTensor16bit,
 )
-from medical_diffusion.utils.train_utils import PyObjectCache
+from medical_diffusion.utils.train_utils import PyObjectCache, MemStorageCache
 
 
 class SimpleDataset2D(data.Dataset):
@@ -264,10 +264,16 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         image_path = row["Path"]
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row["Cardiomegaly"]
+        target = self.transfer_target(raw_target)
         if self.use_cache:
-            result = self.load_cache(image_path, raw_target)
+            source = self.load_source_cache(image_path)
         else:
-            result = self.load_result(image_path, raw_target)
+            source = self.load_source(image_path)
+
+        result = {
+            "source": source,
+            "target": target
+        }
         return result
 
     @classmethod
@@ -288,20 +294,20 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
     def load_item(self, path_item):
         return Image.open(path_item).convert("RGB")
 
-    def load_result(self, image_path, raw_target):
+    def load_source(self, image_path):
         path_item = self.path_root / image_path
         img = self.load_item(path_item)
-        target = self.transfer_target(raw_target)
         source = self.transform(img)
-        return {"source": source, "target": target}
+        return source
 
-    def load_cache(self, image_path, raw_target):
-        cache = PyObjectCache()
-        result = cache.get(image_path)
-        if result is None:
-            result = self.load_result(image_path, raw_target)
-            cache.set(image_path, result)
-        return result
+    def load_source_cache(self, image_path, raw_target):
+        # cache = PyObjectCache()
+        cache = MemStorageCache()
+        source = cache.get(image_path)
+        if source is None:
+            source = self.load_source(image_path, raw_target)
+            cache.set(image_path, source)
+        return source
 
     @classmethod
     def transfer_target(cls, raw_target):
