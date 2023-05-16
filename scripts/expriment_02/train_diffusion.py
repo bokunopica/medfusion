@@ -31,7 +31,7 @@ if __name__ == "__main__":
     dm = SimpleDataModule(
         ds_train = ds,
         batch_size=50, 
-        # num_workers=0,
+        num_workers=0,
         pin_memory=True,
         # weights=ds.get_weights()
         persistent_workers=True

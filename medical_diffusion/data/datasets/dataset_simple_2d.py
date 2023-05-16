@@ -247,14 +247,14 @@ class CheXpert_2_Dataset(SimpleDataset2D):
 
 class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
+        self.count = kwargs.pop('count', 1000)
+        self.use_cache = kwargs.pop("use_cache", False)
         super().__init__(*args, **kwargs)
         # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
         labels = pd.read_csv(self.path_root/ "chexpert" / "CheXpert-v1.0-Resample@512x512" / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        self.count = kwargs.get('count', 1000)
         labels = labels.iloc[:self.count]
         self.labels = labels
-        self.use_cache = kwargs.get("use_cache", False)
 
     def __len__(self):
         return len(self.labels)
@@ -316,11 +316,11 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
 
 class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
     def __init__(self, *args, **kwargs):
+        self.start = kwargs.pop('start', 1000)
+        self.count = kwargs.pop('count', 500)
         super().__init__(*args, **kwargs)
-        labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
+        pd.read_csv(self.path_root/ "chexpert" / "CheXpert-v1.0-Resample@512x512" / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        self.start = kwargs.get('start', 1000)
-        self.count = kwargs.get('count', 500)
         labels = labels.iloc[self.start:(self.start+self.count)]
         self.labels = labels
 
