@@ -42,10 +42,10 @@ if __name__ == "__main__":
     dm = SimpleDataModule(
         ds_train = ds,
         batch_size=16, 
-        num_workers=0,
+        num_workers=8,
         pin_memory=True,
         persistent_workers=True
-    ) 
+    )
     
 
     # ------------ Initialize Model ------------
