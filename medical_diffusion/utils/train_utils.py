@@ -129,12 +129,13 @@ class MemStorageCache(object):
     cache for training data img in a web app
     """
     _path = "/run/user/10009"
-    def set(self, img_path:str, image: Image):
+    def set(self, img_path: str, image: torch.Tensor):
         key_path = f"{self._path}/{img_path}"
         dir_path = '/'.join(key_path.split('/')[:-1])
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
         with open(key_path, 'w') as f:
+            image = Image.fromarray(image.numpy())
             image.save(f)
 
     def get(self, img_path:str):
