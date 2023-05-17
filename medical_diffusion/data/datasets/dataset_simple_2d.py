@@ -300,12 +300,12 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         source = self.transform(img)
         return source
 
-    def load_source_cache(self, image_path, raw_target):
+    def load_source_cache(self, image_path):
         # cache = PyObjectCache()
         cache = MemStorageCache()
         source = cache.get(image_path)
         if source is None:
-            source = self.load_source(image_path, raw_target)
+            source = self.load_source(image_path)
             cache.set(image_path, source)
         return source
 
