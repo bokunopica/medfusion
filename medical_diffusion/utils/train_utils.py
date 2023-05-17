@@ -134,7 +134,7 @@ class MemStorageCache(object):
         dir_path = '/'.join(key_path.split('/')[:-1])
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        with open(key_path) as f:
+        with open(key_path, 'w') as f:
             image.save(f)
 
     def get(self, img_path:str):
