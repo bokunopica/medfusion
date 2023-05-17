@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn 
 import os
 from PIL import Image
-from torchvision.transforms import ToPILImage
+from torchvision.transforms import ToPILImage, ToTensor
 
 class EMAModel(nn.Module):
     # See: https://github.com/huggingface/diffusers/blob/3100bc967084964480628ae61210b7eaa7436f1d/src/diffusers/training_utils.py#L42  
@@ -142,7 +142,7 @@ class MemStorageCache(object):
     def get(self, img_path:str):
         key_path = f"{self._path}/{img_path}"
         if os.path.exists(key_path):
-            source = Image.open(key_path)
+            source = ToTensor()(Image.open(key_path).convert('RGB'))
         else:
             source = None
         return source
