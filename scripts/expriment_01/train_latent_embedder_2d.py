@@ -27,7 +27,8 @@ if __name__ == "__main__":
         image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        path_root = '/home/Slp9280082/'
+        path_root = '/home/Slp9280082/',
+        count=20000
     )
 
     # ds = CheXpert_2_Dataset_test( #  256x256
@@ -64,7 +65,7 @@ if __name__ == "__main__":
     # -------------- Training Initialization ---------------
     to_monitor = "train/L1"  # "val/loss" 
     min_max = "min"
-    save_and_sample_every = 50
+    save_and_sample_every = 625
 
     early_stopping = EarlyStopping(
         monitor=to_monitor,
