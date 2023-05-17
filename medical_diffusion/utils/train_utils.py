@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn 
 import os
 from PIL import Image
+from torchvision.transforms import ToPILImage
 
 class EMAModel(nn.Module):
     # See: https://github.com/huggingface/diffusers/blob/3100bc967084964480628ae61210b7eaa7436f1d/src/diffusers/training_utils.py#L42  
@@ -135,7 +136,7 @@ class MemStorageCache(object):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
         with open(key_path, 'w') as f:
-            image = Image.fromarray(image.numpy())
+            image = ToPILImage(mode="RGB")(image)
             image.save(f)
 
     def get(self, img_path:str):
