@@ -186,66 +186,66 @@ class CheXpert_Dataset(SimpleDataset2D):
         return []
 
 
+# class CheXpert_2_Dataset(SimpleDataset2D):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         labels = pd.read_csv(
+#             self.path_root / "labels/cheXPert_label.csv",
+#             index_col=["Path", "Image Index"],
+#         )  # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
+#         labels = labels.loc[labels["fold"] == "train"].copy()
+#         labels = labels.drop(labels="fold", axis=1)
+
+#         labels2 = pd.read_csv(self.path_root / "labels/train.csv", index_col="Path")
+#         labels2 = labels2.loc[labels2["Frontal/Lateral"] == "Frontal"].copy()
+#         labels2 = labels2[
+#             [
+#                 "Cardiomegaly",
+#             ]
+#         ].copy()
+#         labels2[
+#             (labels2 < 0) | labels2.isna()
+#         ] = 2  # 0 = Negative, 1 = Positive, 2 = Uncertain
+#         labels = labels.join(
+#             labels2["Cardiomegaly"],
+#             on=[
+#                 "Path",
+#             ],
+#             rsuffix="_true",
+#         )
+#         # labels = labels[labels['Cardiomegaly_true']!=2]
+
+#         self.labels = labels
+
+#     def __len__(self):
+#         return len(self.labels)
+
+#     def __getitem__(self, index):
+#         path_index, image_index = self.labels.index[index]
+#         path_item = self.path_root / "train" / f"{image_index:06}.png"
+#         img = self.load_item(path_item)
+#         uid = image_index
+#         target = int(self.labels.loc[(path_index, image_index), "Cardiomegaly"])
+#         # return {'uid':uid, 'source': self.transform(img), 'target':target}
+#         return {"source": self.transform(img), "target": target}
+
+#     @classmethod
+#     def run_item_crawler(cls, path_root, extension, **kwargs):
+#         """Overwrite to speed up as paths are determined by .csv file anyway"""
+#         return []
+
+#     def get_weights(self):
+#         n_samples = len(self)
+#         weight_per_class = 1 / self.labels["Cardiomegaly"].value_counts(normalize=True)
+#         # weight_per_class = {2.0: 1.2, 1.0: 8.2, 0.0: 24.3}
+#         weights = [0] * n_samples
+#         for index in range(n_samples):
+#             target = self.labels.loc[self.labels.index[index], "Cardiomegaly"]
+#             weights[index] = weight_per_class[target]
+#         return weights
+
+
 class CheXpert_2_Dataset(SimpleDataset2D):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        labels = pd.read_csv(
-            self.path_root / "labels/cheXPert_label.csv",
-            index_col=["Path", "Image Index"],
-        )  # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
-        labels = labels.loc[labels["fold"] == "train"].copy()
-        labels = labels.drop(labels="fold", axis=1)
-
-        labels2 = pd.read_csv(self.path_root / "labels/train.csv", index_col="Path")
-        labels2 = labels2.loc[labels2["Frontal/Lateral"] == "Frontal"].copy()
-        labels2 = labels2[
-            [
-                "Cardiomegaly",
-            ]
-        ].copy()
-        labels2[
-            (labels2 < 0) | labels2.isna()
-        ] = 2  # 0 = Negative, 1 = Positive, 2 = Uncertain
-        labels = labels.join(
-            labels2["Cardiomegaly"],
-            on=[
-                "Path",
-            ],
-            rsuffix="_true",
-        )
-        # labels = labels[labels['Cardiomegaly_true']!=2]
-
-        self.labels = labels
-
-    def __len__(self):
-        return len(self.labels)
-
-    def __getitem__(self, index):
-        path_index, image_index = self.labels.index[index]
-        path_item = self.path_root / "train" / f"{image_index:06}.png"
-        img = self.load_item(path_item)
-        uid = image_index
-        target = int(self.labels.loc[(path_index, image_index), "Cardiomegaly"])
-        # return {'uid':uid, 'source': self.transform(img), 'target':target}
-        return {"source": self.transform(img), "target": target}
-
-    @classmethod
-    def run_item_crawler(cls, path_root, extension, **kwargs):
-        """Overwrite to speed up as paths are determined by .csv file anyway"""
-        return []
-
-    def get_weights(self):
-        n_samples = len(self)
-        weight_per_class = 1 / self.labels["Cardiomegaly"].value_counts(normalize=True)
-        # weight_per_class = {2.0: 1.2, 1.0: 8.2, 0.0: 24.3}
-        weights = [0] * n_samples
-        for index in range(n_samples):
-            target = self.labels.loc[self.labels.index[index], "Cardiomegaly"]
-            weights[index] = weight_per_class[target]
-        return weights
-
-
-class CheXpert_2_Dataset_test(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
         self.count = kwargs.pop('count', 1000)
         self.use_cache = kwargs.pop("use_cache", False)
@@ -320,7 +320,7 @@ class CheXpert_2_Dataset_test(SimpleDataset2D):
         return target
 
 
-class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
+class CheXpert_2_Dataset_Evaluate(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
         self.start = kwargs.pop('start', 1000)
         self.count = kwargs.pop('count', 500)
@@ -331,13 +331,13 @@ class CheXpert_2_Dataset_evaluate(CheXpert_2_Dataset_test):
         self.labels = labels
 
 
-class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset_test):
+class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.labels = self.labels[self.labels["Cardiomegaly"] == 1]
 
 
-class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset_test):
+class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.labels = self.labels[self.labels["Cardiomegaly"] != 1]

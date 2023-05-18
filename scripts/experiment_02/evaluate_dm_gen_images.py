@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from medical_diffusion.data.datasets import (
     CheXpert_2_Dataset_Cardiomegaly,
-    CheXpert_2_Dataset_evaluate,
+    CheXpert_2_Dataset_Evaluate,
 )
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.inception import InceptionScore as IS
@@ -47,7 +47,7 @@ calc_pr = ImprovedPrecessionRecall(splits_real=1, splits_fake=1).to(device)
 
 # ------------- dataset --------------------------
 
-evaluate_ds = CheXpert_2_Dataset_evaluate(  #  256x256
+evaluate_ds = CheXpert_2_Dataset_Evaluate(  #  256x256
     image_resize=(256, 256),
     augment_horizontal_flip=False,
     augment_vertical_flip=False,

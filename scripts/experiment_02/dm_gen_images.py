@@ -3,7 +3,7 @@ import torch
 from torchvision import utils
 import math
 from medical_diffusion.models.pipelines import DiffusionPipeline
-from medical_diffusion.data.datasets import CheXpert_2_Dataset_evaluate
+from medical_diffusion.data.datasets import CheXpert_2_Dataset_Evaluate
 from PIL import Image
 
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     use_ddim = True
     images = {}
     n_samples = 500
-    evaluate_ds = CheXpert_2_Dataset_evaluate(  #  256x256
+    evaluate_ds = CheXpert_2_Dataset_Evaluate(  #  256x256
         image_resize=(256, 256),
         augment_horizontal_flip=False,
         augment_vertical_flip=False,

@@ -5,7 +5,7 @@ import torch
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from medical_diffusion.data.datamodules import SimpleDataModule
-from medical_diffusion.data.datasets import CheXpert_2_Dataset_test
+from medical_diffusion.data.datasets import CheXpert_2_Dataset
 from medical_diffusion.models.embedders.latent_embedders import VQVAE, VQGAN, VAE, VAEGAN
 
 import torch.multiprocessing
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # ------------ Load Data ----------------
 
-    ds = CheXpert_2_Dataset_test( #  256x256
+    ds = CheXpert_2_Dataset( #  256x256
         image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,

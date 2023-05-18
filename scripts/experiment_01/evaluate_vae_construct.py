@@ -5,7 +5,7 @@ import torch
 from torchvision import utils
 import math
 from medical_diffusion.models.embedders.latent_embedders import VAE
-from medical_diffusion.data.datasets import CheXpert_2_Dataset_test
+from medical_diffusion.data.datasets import CheXpert_2_Dataset
 from torch.utils.data.dataloader import DataLoader
 import torchvision.transforms.functional as tF
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
@@ -39,7 +39,7 @@ def evaluate(save_img=False):
     torch.manual_seed(0)
     device = torch.device("cuda")
 
-    dataset = CheXpert_2_Dataset_test(  #  256x256
+    dataset = CheXpert_2_Dataset(  #  256x256
         image_resize=(256, 256),
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
