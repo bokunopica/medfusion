@@ -294,21 +294,25 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         return weights
 
     def load_item(self, path_item):
-        return Image.open(path_item).convert("RGB")
+        return Image.open(path_item)
 
     def load_source(self, image_path):
         path_item = self.path_root / image_path
         img = self.load_item(path_item)
+        img = img.convert('RGB')
         source = self.transform(img)
         return source
 
     def load_source_cache(self, image_path):
         # cache = PyObjectCache()
         cache = MemStorageCache()
-        source = cache.get(image_path)
-        if source is None:
-            source = self.load_source(image_path)
-            cache.set(image_path, source)
+        image = cache.get(image_path)
+        path_item = self.path_root / image_path
+        if image is None:
+            image = self.load_item(path_item)
+            cache.set(image_path, image)
+            image = image.convert('RGB')
+        source = self.transform(image)
         return source
 
     @classmethod
