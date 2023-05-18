@@ -249,9 +249,10 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
         self.count = kwargs.pop('count', 1000)
         self.use_cache = kwargs.pop("use_cache", False)
+        self.data_folder_name = kwargs.pop("data_folder_name", 'CheXpert-v1.0-Resample@256x256')
         super().__init__(*args, **kwargs)
         # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
-        labels = pd.read_csv(self.path_root/ "chexpert" / "CheXpert-v1.0-Resample@512x512" / "train.csv")
+        labels = pd.read_csv(self.path_root/ self.data_folder_name / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
         labels = labels.iloc[:self.count]
         self.labels = labels
@@ -262,6 +263,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     def __getitem__(self, index):
         row = self.labels.iloc[index]
         image_path = row["Path"]
+        image_path = f"{self.data_folder_name}/{'/'.join(image_path.split('/')[1:])}"
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row["Cardiomegaly"]
         target = self.transfer_target(raw_target)
@@ -325,7 +327,7 @@ class CheXpert_2_Dataset_Evaluate(CheXpert_2_Dataset):
         self.start = kwargs.pop('start', 1000)
         self.count = kwargs.pop('count', 500)
         super().__init__(*args, **kwargs)
-        pd.read_csv(self.path_root/ "chexpert" / "CheXpert-v1.0-Resample@512x512" / "train.csv")
+        labels = pd.read_csv(self.path_root / self.data_folder_name / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
         labels = labels.iloc[self.start:(self.start+self.count)]
         self.labels = labels
