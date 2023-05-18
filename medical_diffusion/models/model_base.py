@@ -54,6 +54,10 @@ class VeryBasicModel(pl.LightningModule):
             json.dump({'best_model_epoch': Path(best_model_path).name}, f)
 
     @classmethod
+    def print_best_checkpoint(cls, best_model_path):
+        print(json.dump({'best_model_epoch': Path(best_model_path).name}))
+
+    @classmethod
     def _get_best_checkpoint_path(cls, path_checkpoint_dir, version=0, **kwargs):
         path_version = 'lightning_logs/version_'+str(version)
         with open(Path(path_checkpoint_dir) / path_version/ 'best_checkpoint.json', 'r') as f:

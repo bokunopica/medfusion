@@ -107,6 +107,8 @@ if __name__ == "__main__":
     trainer.fit(model, datamodule=dm)
 
     # ------------- Save path to best model -------------
-    model.save_best_checkpoint(trainer.logger.log_dir, checkpointing.best_model_path)
+    # model.save_best_checkpoint(trainer.logger.log_dir, checkpointing.best_model_path)
+    model.print_best_checkpoint(checkpointing.best_model_path)
+
 
 
