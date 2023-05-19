@@ -33,7 +33,7 @@ def concat_pair_images(source_img, target_img, width, height, save_path):
 
 
 def evaluate(save_img=False):
-    path_out = Path.cwd() / "results/CheXpert/samples_vae_05"
+    path_out = Path.cwd() / "results/CheXpert/samples_vae_00"
     path_out.mkdir(parents=True, exist_ok=True)
 
     torch.manual_seed(0)
@@ -46,6 +46,8 @@ def evaluate(save_img=False):
         # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
         # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
         path_root="/mnt/d/chexpert",
+        start=20000,
+        count=1000
     )
 
     model = VAE(
@@ -64,11 +66,11 @@ def evaluate(save_img=False):
     )
 
     model.load_pretrained(
-        Path.cwd() / "runs/experiment02_vae_1k_1e-4_1000ep/last.ckpt",
+        Path.cwd() / "runs/experiment02_vae_20k_1e-4_100ep/last.ckpt",
         strict=True,
     )
     model.eval()
-    sample_nums = 10
+    sample_nums = 1000
 
     # 出图
     results = []
@@ -138,4 +140,4 @@ def evaluate(save_img=False):
 
 
 if __name__ == "__main__":
-    evaluate(save_img=True)
+    evaluate(save_img=False)
