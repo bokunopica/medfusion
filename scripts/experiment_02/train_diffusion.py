@@ -8,7 +8,8 @@ from medical_diffusion.data.datasets import CheXpert_2_Dataset
 from medical_diffusion.models.pipelines import DiffusionPipeline
 from medical_diffusion.models.estimators import UNet
 from medical_diffusion.models.noise_schedulers import GaussianNoiseScheduler
-from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding
+from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding, BertEmbedder
+from transformers import AutoTokenizer, BertModel
 from medical_diffusion.models.embedders.latent_embedders import VAE
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -16,22 +17,24 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 if __name__ == "__main__":
+    gpus = [0]
     # ------------ Load Data ----------------
 
     ds = CheXpert_2_Dataset( #  256x256
         image_resize=(256, 256), 
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
-        # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
-        path_root = '/home/Slp9280082/',
-        count=20000
+        # path_root = '/home/Slp9280082/',
+        path_root = '/mnt/d/chexpert',
+        count=128,
+        # embedder_type=1, # RapBert Text Encoder
     )
 
     dm = SimpleDataModule(
         ds_train = ds,
-        batch_size=50, 
-        num_workers=0,
+        # batch_size=50, 
+        batch_size=16, 
+        num_workers=len(gpus)*4,
         pin_memory=True,
         # weights=ds.get_weights()
         persistent_workers=True
@@ -46,10 +49,18 @@ if __name__ == "__main__":
 
     # ------------ Initialize Model ------------
     # cond_embedder = None 
-    cond_embedder = LabelEmbedder
+    # cond_embedder = LabelEmbedder
+    # cond_embedder_kwargs = {
+    #     'emb_dim': 1024,
+    #     'num_classes': 2
+    # }
+    bert_tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
+    bert_model = BertModel.from_pretrained("StanfordAIMI/RadBERT")
+    cond_embedder = BertEmbedder
     cond_embedder_kwargs = {
         'emb_dim': 1024,
-        'num_classes': 2
+        'model': bert_model,
+        'tokenizer': bert_tokenizer,
     }
 
 
@@ -91,7 +102,7 @@ if __name__ == "__main__":
     # latent_embedder = VQVAE
     latent_embedder = VAE
     # latent_embedder_checkpoint = 'runs/2022_12_12_133315_chest_vaegan/last_vae.ckpt'
-    latent_embedder_checkpoint = 'runs/2023_05_05_143512/last.ckpt'
+    latent_embedder_checkpoint = 'runs/experiment02_vae_20k_1e-4_100ep/last.ckpt'
    
     # ------------ Initialize Pipeline ------------
     pipeline = DiffusionPipeline(
@@ -135,7 +146,7 @@ if __name__ == "__main__":
     )
     trainer = Trainer(
         accelerator=accelerator,
-        devices=[0, 1],
+        devices=gpus,
         # precision=16,
         # amp_backend='apex',
         # amp_level='O2',
@@ -152,7 +163,6 @@ if __name__ == "__main__":
         min_epochs=100,
         max_epochs=1001,
         num_sanity_val_steps=2,
-        find_unused_parameters=False
     )
     
     # ---------------- Execute Training ----------------

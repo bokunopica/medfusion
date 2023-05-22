@@ -224,8 +224,6 @@ class UNet(nn.Module):
         # t [B,]
         # condition [B,]
         # self_cond [B, C, *]
-        
-
         # -------- Time Embedding (Gloabl) -----------
         if t is None:
             time_emb = None 

@@ -13,6 +13,23 @@ from medical_diffusion.data.augmentation.augmentations_2d import (
 from medical_diffusion.utils.train_utils import PyObjectCache, MemStorageCache
 
 
+DISEASE_COLUMNS = [
+    "Enlarged Cardiomediastinum",
+    "Cardiomegaly",
+    "Lung Opacity",
+    "Lung Lesion",
+    "Edema",
+    "Consolidation",
+    "Pneumonia",
+    "Atelectasis",
+    "Pneumothorax",
+    "Pleural Effusion",
+    "Pleural Other",
+    "Fracture",
+    "Support Devices",
+]
+
+
 class SimpleDataset2D(data.Dataset):
     def __init__(
         self,
@@ -250,6 +267,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         self.count = kwargs.pop('count', 1000)
         self.use_cache = kwargs.pop("use_cache", False)
         self.data_folder_name = kwargs.pop("data_folder_name", 'CheXpert-v1.0-Resample@256x256')
+        self.embedder_type = kwargs.pop('embedder_type', 0) # 0-LableEmbedder 1-RapBertEmbedder
         super().__init__(*args, **kwargs)
         # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
         labels = pd.read_csv(self.path_root/ self.data_folder_name / "train.csv")
@@ -266,7 +284,12 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         image_path = f"{self.data_folder_name}/{'/'.join(image_path.split('/')[1:])}"
         # Note: 1 and -1 (uncertain) cases count as positives (1), 0 and NA count as negatives (0)
         raw_target = row["Cardiomegaly"]
-        target = self.transfer_target(raw_target)
+        if self.embedder_type == 0:
+            target = self.transfer_label(raw_target)
+        elif self.embedder_type == 1:
+            target = self.get_prompt_of_target(row)
+        else:
+            target = None
         if self.use_cache:
             source = self.load_source_cache(image_path)
         else:
@@ -316,7 +339,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         return source
 
     @classmethod
-    def transfer_target(cls, raw_target):
+    def transfer_label(cls, raw_target):
         if raw_target is np.nan:
             target = 0
         elif raw_target == 1.0:
@@ -324,6 +347,47 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         else:
             target = 0
         return target
+    
+    # @classmethod
+    # def transfer_label_3_categories(cls, raw_target):
+    #     """
+    #     * 1.0 - The label was positively mentioned in the associated study, and is present in one or more of the corresponding images
+    #         * e.g. "A large pleural effusion"
+    #     * 0.0 - The label was negatively mentioned in the associated study, and therefore should not be present in any of the corresponding images
+    #         * e.g. "No pneumothorax."
+    #     * -1.0 - The label was either: (1) mentioned with uncertainty in the report, and therefore may or may not be present to some degree in the corresponding image, or (2) mentioned with ambiguous language in the report and it is unclear if the pathology exists or not
+    #         * Explicit uncertainty: "The cardiac size cannot be evaluated."
+    #         * Ambiguous language: "The cardiac contours are stable."
+    #     * Missing (empty element) - No mention of the label was made in the report
+        
+    #     """
+    #     if raw_target is np.nan:
+    #         target = 0
+    #     elif raw_target == 1.0:
+    #         target = 1
+    #     else:
+    #         target = 0
+    #     return target
+    
+    def get_prompt_of_target(self, row):
+        """
+        input 
+        """
+        positive_disease_list = []
+        prompt = "A photo of a lung xray"
+        for disease in DISEASE_COLUMNS:
+            if self.transfer_label(row[disease]):
+                positive_disease_list.append(disease)
+        
+        if positive_disease_list:
+            if len(positive_disease_list) == 1:
+                positive_str = positive_disease_list[0]
+            else:
+                positive_str = ",".join(positive_disease_list[:-1])
+                positive_str += f" and {positive_disease_list[-1]}"
+            prompt += f" with {positive_str}"
+            
+        return prompt
 
 
 class CheXpert_2_Dataset_Evaluate(CheXpert_2_Dataset):
@@ -347,3 +411,17 @@ class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.labels = self.labels[self.labels["Cardiomegaly"] != 1]
+
+
+if __name__ == "__main__":
+    ds = CheXpert_2_Dataset( #  256x256
+        image_resize=(256, 256), 
+        augment_horizontal_flip=False,
+        augment_vertical_flip=False,
+        # path_root = '/home/Slp9280082/',
+        path_root = '/mnt/d/chexpert',
+        count=128,
+        embedder_type=1 # RadBertEmbedder
+    )
+    for i in range(16):
+        print(ds[i]['target'])
