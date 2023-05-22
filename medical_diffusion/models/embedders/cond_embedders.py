@@ -2,6 +2,7 @@
 import torch.nn as nn
 import torch 
 from monai.networks.layers.utils import get_act_layer
+from transformers import AutoTokenizer, BertModel
 
 
 class LabelEmbedder(nn.Module):
@@ -47,12 +48,13 @@ class MultiLabelEmbedder(nn.Module):
         return c
     
 
-class BertEmbedder(nn.Module):
-    def __init__(self, tokenizer, model, emb_dim=32,*args, **kwargs):
+class RadBertEmbedder(nn.Module):
+    _tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
+    _model = BertModel.from_pretrained("StanfordAIMI/RadBERT")
+
+    def __init__(self, emb_dim=32,*args, **kwargs):
         super().__init__()
         self.emb_dim = emb_dim
-        self.tokenizer = tokenizer
-        self.model = model
         self.mlp = nn.Sequential(
             nn.Linear(768, emb_dim), # 768 bert output的维度
             nn.LayerNorm(emb_dim),
@@ -62,6 +64,8 @@ class BertEmbedder(nn.Module):
         )
 
     def forward(self, condition):
-        x = self.tokenizer(condition, return_tensors="pt")
-        x = self.mlp(x)
-        return x
+        inputs_list = [self._tokenizer(condition_str, return_tensors="pt") for condition_str in condition]
+        outputs_list = [self._model(**inputs)for inputs in inputs_list]
+        c = torch.stack([outputs.pooler_output[0].to('cuda') for outputs in outputs_list])
+        c = self.mlp(c)
+        return c

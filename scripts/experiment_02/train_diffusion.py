@@ -8,7 +8,7 @@ from medical_diffusion.data.datasets import CheXpert_2_Dataset
 from medical_diffusion.models.pipelines import DiffusionPipeline
 from medical_diffusion.models.estimators import UNet
 from medical_diffusion.models.noise_schedulers import GaussianNoiseScheduler
-from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding, BertEmbedder
+from medical_diffusion.models.embedders import LabelEmbedder, TimeEmbbeding, RadBertEmbedder
 from transformers import AutoTokenizer, BertModel
 from medical_diffusion.models.embedders.latent_embedders import VAE
 import torch.multiprocessing
@@ -26,14 +26,14 @@ if __name__ == "__main__":
         augment_vertical_flip=False,
         # path_root = '/home/Slp9280082/',
         path_root = '/mnt/d/chexpert',
-        count=128,
-        # embedder_type=1, # RapBert Text Encoder
+        count=20000,
+        embedder_type=1, # RapBert Text Encoder
     )
 
     dm = SimpleDataModule(
         ds_train = ds,
         # batch_size=50, 
-        batch_size=16, 
+        batch_size=50, 
         num_workers=len(gpus)*4,
         pin_memory=True,
         # weights=ds.get_weights()
@@ -54,13 +54,10 @@ if __name__ == "__main__":
     #     'emb_dim': 1024,
     #     'num_classes': 2
     # }
-    bert_tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
-    bert_model = BertModel.from_pretrained("StanfordAIMI/RadBERT")
-    cond_embedder = BertEmbedder
+
+    cond_embedder = RadBertEmbedder
     cond_embedder_kwargs = {
         'emb_dim': 1024,
-        'model': bert_model,
-        'tokenizer': bert_tokenizer,
     }
 
 
