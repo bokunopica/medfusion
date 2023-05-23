@@ -66,7 +66,7 @@ class RadBertEmbedder(nn.Module):
         ).to(self._device)
 
     def forward(self, condition):
-        inputs = self._tokenizer(condition, return_tensors="pt").to(self._device)
+        inputs = self._tokenizer(condition, return_tensors="pt", padding=True).to(self._device)
         outputs = self._model(**inputs)
         c = outputs.last_hidden_state[:, 0] # [CLS]
         c = self.mlp(c)
