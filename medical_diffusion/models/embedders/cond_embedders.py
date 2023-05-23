@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch 
 from monai.networks.layers.utils import get_act_layer
 from transformers import AutoTokenizer, BertModel
+import time
 
 
 class LabelEmbedder(nn.Module):
@@ -49,8 +50,9 @@ class MultiLabelEmbedder(nn.Module):
     
 
 class RadBertEmbedder(nn.Module):
+    _device = f"{torch.device('cuda' if torch.cuda.is_available() else 'cpu')}:{torch.cuda.current_device()}"
     _tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
-    _model = BertModel.from_pretrained("StanfordAIMI/RadBERT")
+    _model = BertModel.from_pretrained("StanfordAIMI/RadBERT").to('cuda')
 
     def __init__(self, emb_dim=32,*args, **kwargs):
         super().__init__()
@@ -61,11 +63,15 @@ class RadBertEmbedder(nn.Module):
             nn.ReLU(),
             nn.Linear(emb_dim, emb_dim),
             nn.LayerNorm(emb_dim),
-        )
+        ).to(self._device)
 
     def forward(self, condition):
-        inputs_list = [self._tokenizer(condition_str, return_tensors="pt") for condition_str in condition]
-        outputs_list = [self._model(**inputs)for inputs in inputs_list]
-        c = torch.stack([outputs.pooler_output[0].to('cuda') for outputs in outputs_list])
+        start = time.time()
+        inputs_list = [self._tokenizer(condition_str, return_tensors="pt").to(self._device) for condition_str in condition]
+        with torch.no_grad():
+            outputs_list = [self._model(**inputs) for inputs in inputs_list]
+        c = torch.stack([outputs.pooler_output[0] for outputs in outputs_list])
         c = self.mlp(c)
+        end = time.time()
+        print("forward_time: ", end-start)
         return c
