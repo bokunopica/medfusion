@@ -66,12 +66,8 @@ class RadBertEmbedder(nn.Module):
         ).to(self._device)
 
     def forward(self, condition):
-        start = time.time()
-        inputs_list = [self._tokenizer(condition_str, return_tensors="pt").to(self._device) for condition_str in condition]
-        with torch.no_grad():
-            outputs_list = [self._model(**inputs) for inputs in inputs_list]
-        c = torch.stack([outputs.pooler_output[0] for outputs in outputs_list])
+        inputs = self._tokenizer(condition, return_tensors="pt").to(self._device)
+        outputs = self._model(**inputs)
+        c = outputs.last_hidden_state[:, 0] # [CLS]
         c = self.mlp(c)
-        end = time.time()
-        print("forward_time: ", end-start)
         return c
