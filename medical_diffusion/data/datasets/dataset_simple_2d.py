@@ -368,15 +368,15 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     #     else:
     #         target = 0
     #     return target
-    
-    def get_prompt_of_target(self, row):
+    @classmethod
+    def get_prompt_of_target(cls, row):
         """
         input 
         """
         positive_disease_list = []
         prompt = "A photo of a lung xray"
         for disease in DISEASE_COLUMNS:
-            if self.transfer_label(row[disease]):
+            if cls.transfer_label(row[disease]):
                 positive_disease_list.append(disease)
         
         if positive_disease_list:
@@ -392,7 +392,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
 
 class CheXpert_2_Dataset_Evaluate(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
-        self.start = kwargs.pop('start', 1000)
+        self.start = kwargs.pop('start', 20000)
         self.count = kwargs.pop('count', 500)
         super().__init__(*args, **kwargs)
         labels = pd.read_csv(self.path_root / self.data_folder_name / "train.csv")

@@ -4,7 +4,6 @@ from torchvision import utils
 import math
 from medical_diffusion.models.pipelines import DiffusionPipeline
 from medical_diffusion.data.datasets import CheXpert_2_Dataset_Evaluate
-from PIL import Image
 
 
 def rgb2gray(img):
@@ -19,7 +18,7 @@ def normalize(img):
 
 
 if __name__ == "__main__":
-    path_out = Path.cwd() / "results/CheXpert/samples_gen"
+    path_out = Path.cwd() / "results/CheXpert/experiment_02/samples_gen"
     path_out.mkdir(parents=True, exist_ok=True)
 
     torch.manual_seed(1)
@@ -27,8 +26,10 @@ if __name__ == "__main__":
 
     # ------------ Load Model ------------
     # pipeline = DiffusionPipeline.load_best_checkpoint(path_run_dir)
+
     pipeline = DiffusionPipeline.load_from_checkpoint(
-        "runs/2023_05_08_161224/last.ckpt"
+        "runs/experiment02_dm_20kl_140ep/epoch=140-step=88000.ckpt",
+        strict=False
     )
     pipeline.to(device)
 
@@ -36,27 +37,30 @@ if __name__ == "__main__":
     steps = 150
     use_ddim = True
     images = {}
-    n_samples = 500
+    n_samples = 50
     evaluate_ds = CheXpert_2_Dataset_Evaluate(  #  256x256
         image_resize=(256, 256),
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        path_root="/home/Slp9280082/"
+        path_root="/mnt/d/chexpert"
     )
 
     un_cond = None
 
     for i in range(n_samples):
         # for cond in [0, 1, None]:
-        cond = evaluate_ds.transfer_target(
-            evaluate_ds.labels.iloc[i]['Cardiomegaly']
-        )
+        # cond = evaluate_ds.transfer_target(
+        #     evaluate_ds.labels.iloc[i]['Cardiomegaly']
+        # )
         img_size = (8, 32, 32)
-        condition = torch.tensor([cond], device=device) if cond is not None else None
+        # condition = torch.tensor([cond], device=device) if cond is not None else None
+        data = evaluate_ds[i]
+        row = evaluate_ds.labels.iloc[i]
+        condition = CheXpert_2_Dataset_Evaluate.get_prompt_of_target(row)
         with torch.no_grad():
             result = pipeline.sample(
                 1,
-                (8, 32, 32),
+                img_size,
                 condition=condition,
                 un_cond=un_cond,
                 steps=steps,
@@ -68,7 +72,7 @@ if __name__ == "__main__":
         # results = normalize(results)
         utils.save_image(
             result,
-            path_out / f"evaluate_{i}.png",
+            path_out / f"evaluate_{i}_{condition}.png",
             nrow=int(math.sqrt(result.shape[0])),
             normalize=True,
             scale_each=True,

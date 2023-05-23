@@ -50,13 +50,16 @@ class MultiLabelEmbedder(nn.Module):
     
 
 class RadBertEmbedder(nn.Module):
-    _device = f"{torch.device('cuda' if torch.cuda.is_available() else 'cpu')}:{torch.cuda.current_device()}"
-    _tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
-    _model = BertModel.from_pretrained("StanfordAIMI/RadBERT").to('cuda')
+    # _device = f"{torch.device('cuda' if torch.cuda.is_available() else 'cpu')}:{torch.cuda.current_device()}"
+    # _tokenizer = AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT")
+    # _model = BertModel.from_pretrained("StanfordAIMI/RadBERT").to('cuda')
 
     def __init__(self, emb_dim=32,*args, **kwargs):
         super().__init__()
         self.emb_dim = emb_dim
+        self._device = f"{torch.device('cuda' if torch.cuda.is_available() else 'cpu')}:{torch.cuda.current_device()}"
+        self._model = kwargs.get('model', BertModel.from_pretrained("StanfordAIMI/RadBERT").to('cuda'))
+        self._tokenizer = kwargs.get('tokenizer', AutoTokenizer.from_pretrained("StanfordAIMI/RadBERT"))
         self.mlp = nn.Sequential(
             nn.Linear(768, emb_dim), # 768 bert output的维度
             nn.LayerNorm(emb_dim),
