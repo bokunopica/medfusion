@@ -5,7 +5,7 @@ import torch
 from torchvision import utils
 import math
 from medical_diffusion.models.embedders.latent_embedders import VAE
-from medical_diffusion.data.datasets import CheXpert_2_Dataset_Evaluate
+from medical_diffusion.data.datasets import BreastCancerDataset
 from torch.utils.data.dataloader import DataLoader
 import torchvision.transforms.functional as tF
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
@@ -33,21 +33,17 @@ def concat_pair_images(source_img, target_img, width, height, save_path):
 
 
 def evaluate(save_img=False):
-    path_out = Path.cwd() / "results/CheXpert/samples_vae_00"
+    path_out = Path.cwd() / "results/breastCancer/samples_vae_00"
     path_out.mkdir(parents=True, exist_ok=True)
 
     torch.manual_seed(0)
     device = torch.device("cuda")
 
-    dataset = CheXpert_2_Dataset_Evaluate(  #  256x256
+    dataset = BreastCancerDataset(  #  256x256
         image_resize=(256, 256),
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        # path_root = '/home/gustav/Documents/datasets/CheXpert/preprocessed_tianyu'
-        # path_root = '/mnt/hdd/datasets/chest/CheXpert/ChecXpert-v10/preprocessed_tianyu'
-        path_root="/mnt/d/chexpert",
-        start=20000,
-        count=1000
+        path_root="/mnt/d",
     )
 
     model = VAE(
@@ -66,11 +62,11 @@ def evaluate(save_img=False):
     )
 
     model.load_pretrained(
-        Path.cwd() / "runs/experiment02_vae_20k_1e-4_100ep/last.ckpt",
+        Path.cwd() / "runs/experiment03_vae_500_1000ep/last.ckpt",
         strict=True,
     )
     model.eval()
-    sample_nums = 1000
+    sample_nums = 10
 
     # 出图
     results = []
@@ -140,4 +136,4 @@ def evaluate(save_img=False):
 
 
 if __name__ == "__main__":
-    evaluate(save_img=False)
+    evaluate(save_img=True)
