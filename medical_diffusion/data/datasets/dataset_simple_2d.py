@@ -1,3 +1,4 @@
+import os
 import torch.utils.data as data
 import torch
 from torch import nn
@@ -41,10 +42,12 @@ class SimpleDataset2D(data.Dataset):
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
         image_crop=None,
+        use_cache=False
     ):
         super().__init__()
         self.path_root = Path(path_root)
         self.crawler_ext = crawler_ext
+        self.use_cache=use_cache
         if len(item_pointers):
             self.item_pointers = item_pointers
         else:
@@ -264,15 +267,18 @@ class CheXpert_Dataset(SimpleDataset2D):
 
 class CheXpert_2_Dataset(SimpleDataset2D):
     def __init__(self, *args, **kwargs):
-        self.count = kwargs.pop('count', 1000)
-        self.use_cache = kwargs.pop("use_cache", False)
-        self.data_folder_name = kwargs.pop("data_folder_name", 'CheXpert-v1.0-Resample@256x256')
-        self.embedder_type = kwargs.pop('embedder_type', 0) # 0-LableEmbedder 1-RapBertEmbedder
+        self.count = kwargs.pop("count", 1000)
+        self.data_folder_name = kwargs.pop(
+            "data_folder_name", "CheXpert-v1.0-Resample@256x256"
+        )
+        self.embedder_type = kwargs.pop(
+            "embedder_type", 0
+        )  # 0-LableEmbedder 1-RapBertEmbedder
         super().__init__(*args, **kwargs)
         # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
-        labels = pd.read_csv(self.path_root/ self.data_folder_name / "train.csv")
+        labels = pd.read_csv(self.path_root / self.data_folder_name / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        labels = labels.iloc[:self.count]
+        labels = labels.iloc[: self.count]
         self.labels = labels
 
     def __len__(self):
@@ -295,10 +301,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         else:
             source = self.load_source(image_path)
 
-        result = {
-            "source": source,
-            "target": target
-        }
+        result = {"source": source, "target": target}
         return result
 
     @classmethod
@@ -322,7 +325,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     def load_source(self, image_path):
         path_item = self.path_root / image_path
         img = self.load_item(path_item)
-        img = img.convert('RGB')
+        img = img.convert("RGB")
         source = self.transform(img)
         return source
 
@@ -334,7 +337,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         if image is None:
             image = self.load_item(path_item)
             cache.set(image_path, image)
-            image = image.convert('RGB')
+            image = image.convert("RGB")
         source = self.transform(image)
         return source
 
@@ -347,7 +350,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
         else:
             target = 0
         return target
-    
+
     # @classmethod
     # def transfer_label_3_categories(cls, raw_target):
     #     """
@@ -359,7 +362,7 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     #         * Explicit uncertainty: "The cardiac size cannot be evaluated."
     #         * Ambiguous language: "The cardiac contours are stable."
     #     * Missing (empty element) - No mention of the label was made in the report
-        
+
     #     """
     #     if raw_target is np.nan:
     #         target = 0
@@ -371,14 +374,14 @@ class CheXpert_2_Dataset(SimpleDataset2D):
     @classmethod
     def get_prompt_of_target(cls, row):
         """
-        input 
+        input
         """
         positive_disease_list = []
         prompt = "A photo of a lung xray"
         for disease in DISEASE_COLUMNS:
             if cls.transfer_label(row[disease]):
                 positive_disease_list.append(disease)
-        
+
         if positive_disease_list:
             if len(positive_disease_list) == 1:
                 positive_str = positive_disease_list[0]
@@ -386,18 +389,18 @@ class CheXpert_2_Dataset(SimpleDataset2D):
                 positive_str = ",".join(positive_disease_list[:-1])
                 positive_str += f" and {positive_disease_list[-1]}"
             prompt += f" with {positive_str}"
-            
+
         return prompt
 
 
 class CheXpert_2_Dataset_Evaluate(CheXpert_2_Dataset):
     def __init__(self, *args, **kwargs):
-        self.start = kwargs.pop('start', 20000)
-        self.count = kwargs.pop('count', 500)
+        self.start = kwargs.pop("start", 20000)
+        self.count = kwargs.pop("count", 500)
         super().__init__(*args, **kwargs)
         labels = pd.read_csv(self.path_root / self.data_folder_name / "train.csv")
         labels = labels[labels["Frontal/Lateral"] == "Frontal"]
-        labels = labels.iloc[self.start:(self.start+self.count)]
+        labels = labels.iloc[self.start : (self.start + self.count)]
         self.labels = labels
 
 
@@ -413,15 +416,106 @@ class CheXpert_2_Dataset_Cardiomegaly(CheXpert_2_Dataset):
         self.labels = self.labels[self.labels["Cardiomegaly"] != 1]
 
 
+class BreastCancerDataset(SimpleDataset2D):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # labels = pd.read_csv(self.path_root / "CheXpert-v1.0" / "train.csv")
+        self._init_label()
+
+    def _init_label(self):
+        self.labels = list()
+        idx = 0
+        for path_obj in os.walk(self.path_root / "ultrasound breast classification"):
+            # path_obj[0]: cur path ;[1]: child folder; [2]: child file
+            for filename in path_obj[2]:
+                if self.file_name_check(filename):
+                    self.labels.append(
+                        (
+                            idx,
+                            f"{path_obj[0]}/{filename}",
+                            self.benign_or_malignant(filename),
+                        )
+                    )
+                    idx += 1
+
+    def file_name_check(self, filename: str):
+        found = False
+        for char in filename:
+            if char == "-":
+                found = True
+                break
+        return not found
+
+    @classmethod
+    def benign_or_malignant(cls, filename):
+        """
+        benign or unknown: 0
+        malignant: 1
+        """
+        if "malignant" in filename:
+            return 1
+        else:
+            return 0
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        row = self.labels[index] # [0] idx [1] path [2] severty label 1=maligant 0=benign 
+        image_path = row[1]
+        target = row[2]
+        if self.use_cache:
+            source = self.load_source_cache(image_path)
+        else:
+            source = self.load_source(image_path)
+
+        result = {"source": source, "target": target}
+        return result
+
+    @classmethod
+    def run_item_crawler(cls, path_root, extension, **kwargs):
+        """Overwrite to speed up as paths are determined by .csv file anyway"""
+        return []
+
+    def load_item(self, path_item):
+        return Image.open(path_item)
+
+    def load_source(self, image_path):
+        img = self.load_item(image_path)
+        img = img.convert("RGB")
+        source = self.transform(img)
+        return source
+
+    def load_source_cache(self, image_path):
+        # cache = PyObjectCache()
+        cache = MemStorageCache()
+        image = cache.get(image_path)
+        if image is None:
+            image = self.load_item(image_path)
+            cache.set(image_path, image)
+            image = image.convert("RGB")
+        source = self.transform(image)
+        return source
+
+
 if __name__ == "__main__":
-    ds = CheXpert_2_Dataset( #  256x256
-        image_resize=(256, 256), 
+    # ds = CheXpert_2_Dataset( #  256x256
+    #     image_resize=(256, 256),
+    #     augment_horizontal_flip=False,
+    #     augment_vertical_flip=False,
+    #     # path_root = '/home/Slp9280082/',
+    #     path_root = '/mnt/d/chexpert',
+    #     count=128,
+    #     embedder_type=1 # RadBertEmbedder
+    # )
+    # for i in range(16):
+    #     print(ds[i]['target'])
+    ds = BreastCancerDataset(
+        image_resize=(256, 256),
         augment_horizontal_flip=False,
         augment_vertical_flip=False,
-        # path_root = '/home/Slp9280082/',
-        path_root = '/mnt/d/chexpert',
-        count=128,
-        embedder_type=1 # RadBertEmbedder
+        path_root="/mnt/d/",
     )
-    for i in range(16):
-        print(ds[i]['target'])
+    print(len(ds))
+    for i in range(len(ds)):
+        print(ds.labels[i][1])
