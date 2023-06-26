@@ -11,6 +11,10 @@ import streamlit as st
 from medical_diffusion.models import BasicModel
 from medical_diffusion.utils.train_utils import EMAModel
 from medical_diffusion.utils.math_utils import kl_gaussians
+from torchvision import utils
+import math
+
+from torchvision.transforms import ToPILImage
 
 
 
@@ -308,6 +312,69 @@ class DiffusionPipeline(BasicModel):
             x_t = self.latent_embedder.decode(x_t)
         
         return x_t # Should be x_0 in final step (t=0)
+    
+
+
+    @torch.no_grad()
+    def denoise_step_image(self, x_t, steps=None, condition=None, use_ddim=True, **kwargs):
+        self_cond = None 
+
+        # ---------- run denoise loop ---------------
+        if use_ddim:
+            steps = self.noise_scheduler.timesteps if steps is None else steps
+            timesteps_array = torch.linspace(0, self.noise_scheduler.T-1, steps, dtype=torch.long, device=x_t.device) # [0, 1, 2, ..., T-1] if steps = T 
+        else:
+            timesteps_array = self.noise_scheduler.timesteps_array[slice(0, steps)] # [0, ...,T-1] (target time not time of x_t)
+        # st_prog_bar = st.progress(0)
+        for i, t in tqdm(enumerate(reversed(timesteps_array))):
+            # st_prog_bar.progress((i+1)/len(timesteps_array))
+
+            # UNet prediction 
+            x_t, x_0, x_T, self_cond = self(x_t, t.expand(x_t.shape[0]), condition, self_cond=self_cond, **kwargs)
+            self_cond = self_cond if self.use_self_conditioning else None  
+        
+            if use_ddim and (steps-i-1>0):
+                t_next = timesteps_array[steps-i-2]
+                alpha = self.noise_scheduler.alphas_cumprod[t]
+                alpha_next = self.noise_scheduler.alphas_cumprod[t_next]
+                sigma = kwargs.get('eta', 1) * ((1 - alpha / alpha_next) * (1 - alpha_next) / (1 - alpha)).sqrt()
+                c = (1 - alpha_next - sigma ** 2).sqrt()
+                noise = torch.randn_like(x_t)
+                x_t = x_0 * alpha_next.sqrt() + c * x_T + sigma * noise
+
+
+            result = self.latent_embedder.decode(x_t)[0]
+            print(result.shape)
+            result = (result + 1) / 2  # Transform from [-1, 1] to [0, 1]
+            result = result.clamp(0, 1)
+            PIL_img = ToPILImage()(result)
+            PIL_img.save(
+                f"/home/pico/myCodes/medfusion/results/CheXpert/experiment_02/samples_gen_noise/evaluate_{i}_{condition}_{t}.png",
+            )
+            # utils.save_image(
+            #     result,
+                
+            #     nrow=int(math.sqrt(result.shape[0])),
+            #     normalize=True,
+            #     scale_each=True,
+            # )
+            
+
+        # ------ Eventually decode from latent space into image space--------
+        if self.latent_embedder is not None:
+            x_t = self.latent_embedder.decode(x_t)
+        
+        return x_t # Should be x_0 in final step (t=0)
+    
+
+    @torch.no_grad()
+    def sample_with_denoise_step(self, num_samples, img_size, condition=None, **kwargs):
+        template = torch.zeros((num_samples, *img_size), device=self.device)
+        x_T = self.noise_scheduler.x_final(template)
+        x_0 = self.denoise_step_image(x_T, condition=condition, **kwargs)
+        return x_0 
+
+
 
     @torch.no_grad()
     def sample(self, num_samples, img_size, condition=None, **kwargs):

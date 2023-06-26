@@ -67,10 +67,12 @@ def evaluate(save_img=False):
     )
     model.eval()
     sample_nums = 10
+    index_list = [0,1,2,3,4,254,255,256,257,258]
 
     # 出图
     results = []
-    for i in range(sample_nums):
+    # for i in range(sample_nums):
+    for i in index_list:
         with torch.no_grad():
             data = dataset[i]["source"]
             input = data.unsqueeze(0)
@@ -81,9 +83,12 @@ def evaluate(save_img=False):
 
     calc_lpips = LPIPS().to(device)
     mmssim_list, mse_list = [], []
-    for i in range(len(results)):
-        result = normalize(results[i])
+    # for i in range(len(results)):
+    for i in index_list:
+        result = normalize(results[index_list.index(i)])
         source = normalize(dataset[i]["source"])
+        target = dataset[i]['target']
+        target_str = "malignant" if target else "benigh"
         # source = (source + 1) / 2
         # source = source.clamp(0, 1)
         nrow = int(math.sqrt(result.shape[0]))
@@ -95,7 +100,7 @@ def evaluate(save_img=False):
         if save_img:
             result_path = path_out / f"test_vae_{i}.png"
             source_path = path_out / f"test_vae_source_{i}.png"
-            save_path = path_out / f"test_vae_paired_{i}.png"
+            save_path = path_out / f"test_vae_paired_{i}_{target_str}.png"
 
             utils.save_image(
                 result,
@@ -137,3 +142,18 @@ def evaluate(save_img=False):
 
 if __name__ == "__main__":
     evaluate(save_img=True)
+    # dataset = BreastCancerDataset(  #  256x256
+    #     image_resize=(256, 256),
+    #     augment_horizontal_flip=False,
+    #     augment_vertical_flip=False,
+    #     path_root="/mnt/d",
+    # )
+    # m_list = []
+    # b_list = []
+    # for i in range(len(dataset)):
+    #     if dataset[i]['target']:
+    #         m_list.append(i)
+    #     else:
+    #         b_list.append(i)
+    # print(m_list[:10])
+    # print(b_list[:10])
